@@ -37,7 +37,7 @@ function formatNormal(normal: Vec3): string {
   )}`;
 }
 
-export default function writeObj(model: Model, opts: ExportObjOptions) {
+export default function writeObj(model: Model, opts: ExportObjOptions): string {
   let output = `o ${model.name}\n`;
   let vertexOffset = 0;
 
@@ -127,5 +127,5 @@ export default function writeObj(model: Model, opts: ExportObjOptions) {
   output += vn.join("\n") + "\n\n";
   output += f.join("\n") + "\n";
 
-  console.log(output);
+  return output;
 }

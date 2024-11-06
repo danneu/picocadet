@@ -366,6 +366,26 @@ export namespace Mesh {
     return unusedIndices;
   }
 
+  // if vertex is 0.1534 and multiple is 0.01, then new vertex should be 0.15.
+  // if vertex is 0.567 and multiple is 0.01 then new vertex should be 0.57
+  export function roundVertices(mesh: Mesh, multiple: number): Mesh {
+    const precision = Math.log10(1 / multiple); // For 0.01, this gives us 2
+    const factor = Math.pow(10, precision);
+    console.log({
+      multiple,
+      precision,
+      factor,
+    });
+    const roundedVertices = mesh.vertices.map((vertex) =>
+      Vec3.create(
+        Math.round(vertex.x * factor) / factor,
+        Math.round(vertex.y * factor) / factor,
+        Math.round(vertex.z * factor) / factor
+      )
+    );
+    return create({ ...mesh, vertices: roundedVertices });
+  }
+
   export function mergeOverlappingVertices(
     mesh: Mesh,
     threshold = DEFAULT_CLOSENESS_THRESHOLD

@@ -1,5 +1,5 @@
 import { version } from "../package.json";
-import { constants } from "node:fs";
+import { constants, readFileSync, writeFileSync } from "node:fs";
 import { readFile, writeFile, access } from "node:fs/promises";
 import { Mesh, Model, Color, Vec3 } from "./index.js";
 import writePicoCADFile from "./write-picocad-file.js";
@@ -54,6 +54,7 @@ async function main() {
         { name: "Merge meshes", value: "merge" },
         { name: "Flip mesh", value: "flip" },
         { name: "Change all mesh face props", value: "all-face-props" },
+        { name: "Round vertices", value: "round-vertices" },
         { name: "Copy UVs", value: "copy-uvs" },
         { name: "Import meshes", value: "import" },
         {
@@ -67,7 +68,6 @@ async function main() {
         { name: "Save as...", value: "save" },
         { name: "Overwrite", value: "overwrite" },
         { name: "Export .obj", value: "export" },
-        // { name: 'Export .fbx', value: 'export-fbx' },
         new Separator(),
         { name: "Exit", value: "exit" },
       ],
@@ -143,6 +143,35 @@ async function main() {
           }
         }
 
+        break;
+      }
+      case "round-vertices": {
+        const { meshIdxs } = await prompt({
+          type: "checkbox",
+          name: "meshIdxs",
+          message: "Choose meshes to round their vertices to nearest decimal.",
+          choices: model.meshes.map((mesh, i) => ({
+            name: meshListView(mesh),
+            value: i,
+          })),
+        });
+        let { multiple } = await prompt({
+          type: "input",
+          name: "multiple",
+          message: "Round vertices to nearest multiple.",
+          default: "0.25",
+          validate: async (s: string) => {
+            const re = /^\d+(\.\d+)?$/;
+            if (!re.test(s)) return "must be a number";
+            return true;
+          },
+        });
+        multiple = parseFloat(multiple);
+        console.dir(model.meshes, { depth: null });
+        for (const i of meshIdxs) {
+          model.meshes[i] = Mesh.roundVertices(model.meshes[i], multiple);
+        }
+        console.dir(model.meshes, { depth: null });
         break;
       }
       case "all-face-props": {
@@ -305,15 +334,23 @@ async function main() {
         const o: ExportObjOptions = {
           dupeAndInvertDoubledFaces: options.includes("dbl"),
         };
+
         const text = writeObj(model, o);
+
         console.log(text);
+
+        const { filename } = await prompt({
+          type: "input",
+          name: "filename",
+          message: "Choose a filename",
+          default: model.name + ".obj",
+        });
+        const objPath = join(process.cwd(), filename);
+        writeFileSync(objPath, text);
+        console.log(`Wrote file ${objPath}`);
+
         break;
       }
-      // case 'export-fbx': {
-      //     const text = writeFbx(model, '')
-      //     console.log(text)
-      //     break
-      // }
       case "merge": {
         const { destinationIndex } = await prompt({
           type: "list",
