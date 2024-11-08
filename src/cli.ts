@@ -11,7 +11,6 @@ const { prompt, Separator } = require("inquirer");
 import { shapes } from "./shapes.js";
 
 async function main() {
-  console.log(process.argv);
   // let filePath = process.argv[process.argv.length - 1]
   let filePath = process.argv[2];
   if (!filePath) {
